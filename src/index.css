@@ -1,0 +1,288 @@
+@import 'tailwindcss';
+
+/*
+  MultiClock design tokens.
+
+  Colours are named once as semantic roles and re-pointed per theme, so no
+  component ever names a shade. The dashboard is deliberately monochrome:
+  `--c-accent` resolves to the ink colour until someone opts into an accent in
+  settings, which is what keeps the default looking like one material rather
+  than a palette.
+*/
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  --color-canvas: var(--c-canvas);
+  --color-surface: var(--c-surface);
+  --color-sunken: var(--c-sunken);
+  --color-ink: var(--c-ink);
+  --color-muted: var(--c-muted);
+  --color-faint: var(--c-faint);
+  --color-line: var(--c-line);
+  --color-line-strong: var(--c-line-strong);
+  --color-invert: var(--c-invert);
+  --color-on-invert: var(--c-on-invert);
+  --color-muted-invert: var(--c-muted-invert);
+  --color-accent: var(--c-accent);
+  --color-on-accent: var(--c-on-accent);
+  --color-accent-soft: var(--c-accent-soft);
+
+  --radius-card: 20px;
+  --radius-control: 12px;
+
+  /* Elevation is reserved for things that float above the page. Flat surfaces
+     are separated by a hairline instead, per the brief. */
+  --shadow-float: 0 2px 8px -2px rgb(10 10 10 / 0.08), 0 24px 64px -24px rgb(10 10 10 / 0.28);
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---------------------------------------------------------------- themes -- */
+
+/*
+  Classic Light is the default and the closest to the reference: a soft
+  light-grey ground, white cards, near-black type, and a black selected card.
+  Every muted role clears 4.5:1 on both the canvas and a white card, since
+  secondary text appears on both.
+*/
+:root,
+[data-theme='classic-light'] {
+  --c-canvas: #f1f1ef;
+  --c-surface: #ffffff;
+  --c-sunken: #e7e7e3;
+  --c-ink: #0d0d0d;
+  --c-muted: #5f5f5c;
+  --c-faint: #686864;
+  --c-line: #dadad3;
+  --c-line-strong: #cdcdc6;
+  --c-invert: #0d0d0d;
+  --c-on-invert: #ffffff;
+  --c-muted-invert: #a8a8a3;
+  --c-accent: var(--c-ink);
+  --c-on-accent: var(--c-on-invert);
+  --c-accent-soft: #e7e7e3;
+  color-scheme: light;
+}
+
+[data-theme='midnight'] {
+  --c-canvas: #0a0a0b;
+  --c-surface: #16161a;
+  --c-sunken: #1f1f24;
+  --c-ink: #fafafa;
+  --c-muted: #a6a6ad;
+  --c-faint: #8c8c95;
+  --c-line: #26262c;
+  --c-line-strong: #3a3a42;
+  --c-invert: #fafafa;
+  --c-on-invert: #0a0a0b;
+  --c-muted-invert: #4b4b52;
+  --c-accent: var(--c-ink);
+  --c-on-accent: var(--c-on-invert);
+  --c-accent-soft: #22222a;
+  color-scheme: dark;
+}
+
+[data-theme='soft-neutral'] {
+  --c-canvas: #f5f2ec;
+  --c-surface: #fdfbf7;
+  --c-sunken: #ebe6dd;
+  --c-ink: #262420;
+  --c-muted: #645f56;
+  --c-faint: #6c675d;
+  --c-line: #ded7ca;
+  --c-line-strong: #cdc5b6;
+  --c-invert: #262420;
+  --c-on-invert: #faf8f4;
+  --c-muted-invert: #a8a196;
+  --c-accent: var(--c-ink);
+  --c-on-accent: var(--c-on-invert);
+  --c-accent-soft: #ebe6dd;
+  color-scheme: light;
+}
+
+/*
+  Optional accents. They are applied to one narrow set of things -- focus
+  rings, the sun/moon indicator, and the ring and glow faces -- so turning one
+  on tints the dashboard without colouring it in.
+*/
+[data-accent='amber'] {
+  --c-accent: #a74d08;
+  --c-on-accent: #ffffff;
+  --c-accent-soft: #fdf1e0;
+}
+
+[data-accent='indigo'] {
+  --c-accent: #4f46e5;
+  --c-on-accent: #ffffff;
+  --c-accent-soft: #eceafe;
+}
+
+[data-accent='emerald'] {
+  --c-accent: #047655;
+  --c-on-accent: #ffffff;
+  --c-accent-soft: #e3f3ec;
+}
+
+[data-accent='rose'] {
+  --c-accent: #be123c;
+  --c-on-accent: #ffffff;
+  --c-accent-soft: #fdeaef;
+}
+
+/* The accent shades above are tuned for light grounds; on Midnight they are
+   lightened so they still clear 4.5:1 against a dark surface. */
+[data-theme='midnight'][data-accent='amber'] {
+  --c-accent: #f0ab4c;
+  --c-on-accent: #19130a;
+  --c-accent-soft: #2a2114;
+}
+
+[data-theme='midnight'][data-accent='indigo'] {
+  --c-accent: #9d98f8;
+  --c-on-accent: #11112b;
+  --c-accent-soft: #1d1d33;
+}
+
+[data-theme='midnight'][data-accent='emerald'] {
+  --c-accent: #5ec79a;
+  --c-on-accent: #072116;
+  --c-accent-soft: #13291f;
+}
+
+[data-theme='midnight'][data-accent='rose'] {
+  --c-accent: #f58aa5;
+  --c-on-accent: #2a0a14;
+  --c-accent-soft: #2d1620;
+}
+
+/* ------------------------------------------------------------------ base -- */
+
+html {
+  /* The sticky header must not sit over whatever an anchor jumps to. */
+  scroll-padding-top: 5rem;
+}
+
+body {
+  background-color: var(--c-canvas);
+  color: var(--c-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/*
+  One focus style for the whole app. It is drawn with `outline` rather than a
+  ring utility so it follows the element's own shape and can never be clipped
+  by an ancestor's overflow.
+*/
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/*
+  Digits never reflow the layout: every figure gets the same advance width, so
+  the oversized hero time is as stable at 11:11 as at 08:15.
+*/
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/*
+  The hero time, sized so the widest string it can hold -- eight glyphs for
+  `08:15:40` -- always fits inside the page gutters. Eight glyphs of tabular
+  Inter at this tracking run about 4.06em, so 19vw keeps the line inside the
+  gutters at every width, and the rem cap stops it becoming a billboard.
+
+  One clamp, deliberately: a `min-width` override would make the type jump --
+  and in the obvious direction, *down* -- the moment the viewport crossed the
+  breakpoint.
+*/
+.hero-time {
+  font-size: clamp(2.5rem, 19vw, 13.5rem);
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+  font-weight: 600;
+}
+
+/*
+  Split-flap tiles. Each tile carries the seam a real split-flap display leaves
+  across the middle, and remounts when its digit changes so the keyframes
+  replay -- the reduced-motion block below neutralises them.
+*/
+.flip-tile {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0.74em;
+  padding: 0.18em 0.1em;
+  border-radius: 0.14em;
+  font-weight: 600;
+  line-height: 1;
+  animation: flip-in 240ms var(--ease-out-quint);
+}
+
+.flip-seam {
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.16;
+}
+
+@keyframes flip-in {
+  from {
+    transform: rotateX(-76deg);
+    opacity: 0.35;
+  }
+  to {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+}
+
+/* Restrained by default, and nothing moves for a viewer who asked it not to. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* The modal scrim. `<dialog>` paints it in the top layer, so nothing on the
+   page can sit above it. */
+dialog::backdrop {
+  background: rgb(8 8 10 / 0.44);
+  backdrop-filter: blur(3px);
+}
+
+/*
+  A native select needs its own arrow once `appearance` is cleared. Placement
+  and `no-repeat` belong here rather than at each call site -- a background
+  image defaults to tiling, which draws a column of chevrons.
+*/
+.select-arrow {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b6b66' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  background-size: 14px 14px;
+}
+
+/* Horizontal card rails scroll without a visible scrollbar on touch. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

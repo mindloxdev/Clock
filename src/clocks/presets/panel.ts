@@ -1,0 +1,285 @@
+/** Faces that are objects: a panel, a screen, a slab sitting on the page. */
+import {
+  P_AMBER_CRT,
+  P_BRUTAL,
+  P_BRUTAL_BLUE,
+  P_CANDY,
+  P_CLAY,
+  P_CYBER,
+  P_HUD,
+  P_LCD,
+  P_LCD_BLUE,
+  P_LCD_DARK,
+  P_MAHOGANY,
+  P_MATRIX,
+  P_MEMPHIS,
+  P_NEON_BLUE,
+  P_NEON_PINK,
+  P_NEUMORPH,
+  P_NEUMORPH_BLUE,
+  P_NEWSPRINT,
+  P_OLED,
+  P_PAPER,
+  P_SEPIA,
+  P_TERMINAL,
+  P_VAPOR,
+  P_Y2K,
+} from '../palettes';
+import { THEMED, type ClockPreset, type FacePalette, type PanelSpec } from '../spec';
+
+type Shape = Omit<PanelSpec, 'family'>;
+
+function panel(
+  id: string,
+  name: string,
+  tags: readonly string[],
+  palette: FacePalette,
+  shape: Shape,
+  naturalDark?: boolean,
+): ClockPreset {
+  return {
+    id,
+    name,
+    family: 'panel',
+    kind: 'digital',
+    tags,
+    palette,
+    ...(naturalDark === undefined ? {} : { naturalDark }),
+    spec: { family: 'panel', ...shape },
+  };
+}
+
+export const PANEL_PRESETS: readonly ClockPreset[] = [
+  // The three original ids, preserved.
+  panel('glass', 'Glass', ['glassmorphism', 'frosted', 'soft'], THEMED, {
+    variant: 'glass',
+    radius: 26,
+    font: 'sans',
+    weight: 600,
+    caption: 'date',
+    wash: ['#dfe6f5', '#eceef4', '#f7f7f5'],
+  }),
+  panel('neon', 'Neon', ['neon', 'glow', 'night'], P_NEON_BLUE, {
+    variant: 'neon',
+    radius: 20,
+    font: 'mono',
+    weight: 500,
+    glow: '#7fc4ff',
+    caption: 'date',
+  }, true),
+  panel('lcd', 'Retro LCD', ['lcd', 'retro', 'segments'], P_LCD, {
+    variant: 'lcd',
+    radius: 14,
+    font: 'mono',
+    weight: 500,
+    ghost: true,
+    caption: 'date',
+  }, false),
+
+  // Glass variants ----------------------------------------------------------
+  panel('glass-aurora', 'Aurora glass', ['glassmorphism', 'aurora', 'vivid'], THEMED, {
+    variant: 'glass',
+    radius: 28,
+    font: 'sans',
+    weight: 600,
+    caption: 'city',
+    wash: ['#ffd5f0', '#cfe0ff', '#d8fff0'],
+  }),
+  panel('glass-dark', 'Smoked glass', ['glassmorphism', 'dark', 'moody'], THEMED, {
+    variant: 'glass',
+    radius: 26,
+    font: 'sans',
+    weight: 500,
+    caption: 'offset',
+    wash: ['#3b3b57', '#191922', '#101014'],
+  }, true),
+  panel('glass-liquid', 'Liquid glass', ['glassmorphism', 'lens', 'apple'], THEMED, {
+    variant: 'glass',
+    radius: 34,
+    font: 'sans',
+    weight: 500,
+    caption: 'none',
+    wash: ['#e8f2ff', '#f3eaff', '#fff0f4'],
+  }),
+
+  // Screens -----------------------------------------------------------------
+  panel('neon-pink', 'Pink neon panel', ['neon', 'glow', 'warm'], P_NEON_PINK, {
+    variant: 'neon',
+    radius: 20,
+    font: 'mono',
+    weight: 500,
+    glow: '#ff6ec7',
+    caption: 'city',
+  }, true),
+  panel('neon-cyber', 'Cyber panel', ['cyberpunk', 'neon', 'scanlines'], P_CYBER, {
+    variant: 'neon',
+    radius: 6,
+    font: 'mono',
+    weight: 700,
+    glow: '#00f0ff',
+    scanlines: true,
+    caption: 'offset',
+  }, true),
+  panel('terminal', 'Terminal panel', ['terminal', 'cli', 'green'], P_TERMINAL, {
+    variant: 'terminal',
+    radius: 6,
+    font: 'mono',
+    weight: 400,
+    glow: '#33ff00',
+    scanlines: true,
+    caption: 'city',
+  }, true),
+  panel('terminal-amber', 'Amber terminal', ['terminal', 'crt', 'amber'], P_AMBER_CRT, {
+    variant: 'terminal',
+    radius: 6,
+    font: 'mono',
+    weight: 400,
+    glow: '#ffb000',
+    scanlines: true,
+    caption: 'city',
+  }, true),
+  panel('terminal-matrix', 'Matrix panel', ['matrix', 'code', 'green'], P_MATRIX, {
+    variant: 'terminal',
+    radius: 4,
+    font: 'mono',
+    weight: 400,
+    glow: '#00e676',
+    caption: 'offset',
+  }, true),
+  panel('hud', 'Sci-fi HUD', ['hud', 'sci-fi', 'technical'], P_HUD, {
+    variant: 'hud',
+    radius: 2,
+    font: 'mono',
+    weight: 500,
+    glow: '#7fe7ff',
+    scanlines: true,
+    caption: 'offset',
+  }, true),
+  panel('pixel', 'Pixel', ['pixel', '8-bit', 'arcade'], P_OLED, {
+    variant: 'pixel',
+    radius: 0,
+    font: 'mono',
+    weight: 700,
+    caption: 'city',
+  }, true),
+
+  // LCD variants ------------------------------------------------------------
+  panel('lcd-blue', 'Blue LCD', ['lcd', 'blue', 'retro'], P_LCD_BLUE, {
+    variant: 'lcd',
+    radius: 14,
+    font: 'mono',
+    weight: 500,
+    ghost: true,
+    caption: 'offset',
+  }, false),
+  panel('lcd-dark', 'Night LCD', ['lcd', 'dark', 'retro'], P_LCD_DARK, {
+    variant: 'lcd',
+    radius: 14,
+    font: 'mono',
+    weight: 500,
+    ghost: true,
+    caption: 'date',
+  }, true),
+
+  // Soft --------------------------------------------------------------------
+  panel('neumorph', 'Soft UI panel', ['neumorphism', 'soft', 'embossed'], P_NEUMORPH, {
+    variant: 'neumorph',
+    radius: 28,
+    font: 'sans',
+    weight: 600,
+    caption: 'date',
+  }, false),
+  panel('neumorph-blue', 'Soft blue', ['neumorphism', 'blue', 'calm'], P_NEUMORPH_BLUE, {
+    variant: 'neumorph',
+    radius: 28,
+    font: 'sans',
+    weight: 600,
+    caption: 'city',
+  }, false),
+  panel('clay', 'Clay panel', ['claymorphism', 'playful', 'chunky'], P_CLAY, {
+    variant: 'clay',
+    radius: 30,
+    font: 'sans',
+    weight: 700,
+    caption: 'city',
+  }, false),
+  panel('clay-candy', 'Candy', ['claymorphism', 'pink', 'playful'], P_CANDY, {
+    variant: 'clay',
+    radius: 30,
+    font: 'sans',
+    weight: 700,
+    caption: 'date',
+  }, false),
+
+  // Graphic -----------------------------------------------------------------
+  panel('brutal', 'Neubrutalist panel', ['brutalism', 'yellow', 'bold'], P_BRUTAL, {
+    variant: 'brutal',
+    radius: 0,
+    font: 'sans',
+    weight: 800,
+    shadow: '#000000',
+    caption: 'city',
+  }, false),
+  panel('brutal-blue', 'Brutalist blue', ['brutalism', 'blue', 'bold'], P_BRUTAL_BLUE, {
+    variant: 'brutal',
+    radius: 0,
+    font: 'sans',
+    weight: 800,
+    shadow: '#000000',
+    caption: 'city',
+  }, false),
+  panel('memphis', 'Memphis', ['memphis', '80s', 'playful'], P_MEMPHIS, {
+    variant: 'brutal',
+    radius: 18,
+    font: 'sans',
+    weight: 700,
+    shadow: '#86ccca',
+    caption: 'date',
+  }, false),
+  panel('y2k', 'Y2K chrome', ['y2k', 'chrome', 'glossy'], P_Y2K, {
+    variant: 'card',
+    radius: 24,
+    font: 'sans',
+    weight: 700,
+    caption: 'city',
+  }, false),
+  panel('vapor', 'Vaporwave panel', ['vaporwave', 'retro', 'sunset'], P_VAPOR, {
+    variant: 'neon',
+    radius: 16,
+    font: 'mono',
+    weight: 600,
+    glow: '#01cdfe',
+    scanlines: true,
+    caption: 'city',
+  }, true),
+
+  // Paper and print ---------------------------------------------------------
+  panel('eink', 'E-ink', ['paper', 'eink', 'calm'], P_PAPER, {
+    variant: 'eink',
+    radius: 4,
+    font: 'sans',
+    weight: 500,
+    caption: 'date',
+  }, false),
+  panel('eink-news', 'Newsprint panel', ['editorial', 'print', 'paper'], P_NEWSPRINT, {
+    variant: 'eink',
+    radius: 2,
+    font: 'sans',
+    weight: 700,
+    caption: 'date',
+  }, false),
+  panel('card-academia', 'Library card', ['academia', 'mahogany', 'brass'], P_MAHOGANY, {
+    variant: 'card',
+    radius: 10,
+    font: 'sans',
+    weight: 600,
+    caption: 'date',
+  }, true),
+  panel('card-sepia', 'Sepia card', ['vintage', 'sepia', 'warm'], P_SEPIA, {
+    variant: 'card',
+    radius: 10,
+    font: 'sans',
+    weight: 600,
+    caption: 'city',
+  }, true),
+];

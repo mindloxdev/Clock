@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MultiClock — World Clock Dashboard</title>
+    <meta
+      name="description"
+      content="A premium, minimalist world clock. Track every city you care about with live time zones, 15 clock designs, and sunrise and sunset times."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      /*
+        Applies the saved theme before first paint. Without it a Midnight user
+        sees one frame of Classic Light, because the stored choice is only read
+        once React mounts. An unrecognised value simply leaves the default in
+        place -- the CSS has no rule for it.
+      */
+      try {
+        var saved = JSON.parse(localStorage.getItem('multiclock.v1') || 'null');
+        if (saved && typeof saved.theme === 'string') {
+          document.documentElement.dataset.theme = saved.theme;
+        }
+        if (saved && typeof saved.accent === 'string') {
+          document.documentElement.dataset.accent = saved.accent;
+        }
+      } catch (error) {
+        /* Storage can be blocked; the default theme is correct in that case. */
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
