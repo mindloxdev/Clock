@@ -1,4 +1,5 @@
 import { clockKind } from '@/clocks/registry';
+import { zoneLabel, type ZoneLabel } from '@/time/abbreviations';
 import { getSunInfo, isDaylight, isDaylightByHour, type SunInfo } from '@/time/sun';
 import type { SavedClock } from '@/time/types';
 import { formatOffset, viewerTimeZone, zonedTime, type ZonedTime } from '@/time/zones';
@@ -15,6 +16,8 @@ export interface ClockReading {
   sun: SunInfo | null;
   isDay: boolean;
   offsetLabel: string;
+  /** What to call this zone right now: `Pakistan Standard Time`, `PKT`. */
+  zone: ZoneLabel;
   /** The clock's own override, or the dashboard default. */
   hour12: boolean;
   showSeconds: boolean;
@@ -59,6 +62,7 @@ export function useClockReading(clock: SavedClock, rate: TickRate): ClockReading
     sun,
     isDay,
     offsetLabel: formatOffset(time.offsetMinutes),
+    zone: zoneLabel(clock.timeZone, nowMs, time.offsetMinutes),
     hour12: clock.prefs.hour12 ?? state.hour12,
     showSeconds: clock.prefs.showSeconds,
   };

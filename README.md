@@ -84,6 +84,16 @@ abbreviations (IST is India, Ireland *and* Israel; CST is the US, China and
 Cuba) list every real candidate rather than silently choosing. Offsets work as
 queries as well: `UTC+5:30`, `gmt-3`, `+0545`.
 
+**Zones are named, not just numbered.** `Intl` has a full name for every
+zone and switches between the standard and summer forms itself, so Karachi
+reads "Pakistan Standard Time" and Denver reads "Mountain Daylight Time" in
+July. Abbreviations are harder: `Intl` only returns real letters for North
+America and falls back to `GMT+5` elsewhere, so the curated table supplies
+the rest, and where a zone has both a winter and a summer form the full name
+decides which applies. They are never derived from the name's initials —
+that turns Pakistan Standard Time into the Pacific's `PST`. A zone with no
+settled abbreviation shows its offset instead of an invented one.
+
 **Converting *to* an instant is the hard direction.** Everything else goes
 instant → wall clock, which is always well defined. Going back is not: twice a
 year a zone skips an hour, so `02:30` never happens, and twice a year it
@@ -199,7 +209,7 @@ Measured at 320–1600px with zero horizontal overflow at every width.
 
 ## Verified
 
-63 tests cover the zone arithmetic (DST in both hemispheres, 45-minute and
+71 tests cover the zone arithmetic (DST in both hemispheres, 45-minute and
 negative half-hour offsets, date rollover), sunrise/sunset including the polar
 cases at Longyearbyen, time formatting, hand angles, abbreviation and offset
 search, dataset integrity, catalogue integrity (no duplicate ids or names,

@@ -42,7 +42,9 @@ function ClockRow({ clock, onEdit }: { clock: SavedClock; onEdit: () => void }) 
         <p className="truncate text-[12px] text-muted">
           {citySubtitle(clock) ? citySubtitle(clock) + ' · ' : ''}
           <span className="text-faint">
-            <span className="tnum">{reading.offsetLabel}</span>
+            <span className="tnum">{reading.zone.short}</span>
+            {reading.zone.abbreviation ? ' · ' : ''}
+            {reading.zone.abbreviation ? <span className="tnum">{reading.zone.offset}</span> : null}
           </span>
         </p>
       </div>

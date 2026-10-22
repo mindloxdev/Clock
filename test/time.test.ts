@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { ZONE_ABBREVIATIONS, parseOffsetQuery } from '@/time/abbreviations';
+import { ZONE_ABBREVIATIONS, parseOffsetQuery, zoneLabel } from '@/time/abbreviations';
 import {
   formatOffsetDelta,
   instantFromWallTime,
@@ -325,6 +325,62 @@ describe('city dataset', () => {
     expect(new Set(londons.map((city) => city.id)).size).toBe(londons.length);
     expect(londons.some((city) => city.timeZone === 'Europe/London')).toBe(true);
     expect(londons.some((city) => city.timeZone === 'America/Toronto')).toBe(true);
+  });
+});
+
+describe('zoneLabel', () => {
+  const label = (zone: string, nowMs: number) =>
+    zoneLabel(zone, nowMs, zonedTime(nowMs, zone).offsetMinutes);
+
+  it('names every zone, not just the American ones', () => {
+    // The case that prompted this: Lahore should say what it is called.
+    expect(label('Asia/Karachi', SUMMER).name).toBe('Pakistan Standard Time');
+    expect(label('Asia/Karachi', SUMMER).abbreviation).toBe('PKT');
+    expect(label('Asia/Kolkata', SUMMER).name).toBe('India Standard Time');
+    expect(label('Asia/Tokyo', SUMMER).name).toBe('Japan Standard Time');
+    expect(label('Asia/Dubai', SUMMER).abbreviation).toBe('GST');
+  });
+
+  it('follows the season', () => {
+    expect(label('America/Denver', SUMMER).name).toBe('Mountain Daylight Time');
+    expect(label('America/Denver', WINTER).name).toBe('Mountain Standard Time');
+    expect(label('America/Denver', SUMMER).abbreviation).toBe('MDT');
+    expect(label('America/Denver', WINTER).abbreviation).toBe('MST');
+
+    // Intl gives no letters for Europe, so these come from the curated table
+    // and have to pick the right half of the year.
+    expect(label('Europe/London', SUMMER).abbreviation).toBe('BST');
+    expect(label('Europe/London', WINTER).abbreviation).toBe('GMT');
+    expect(label('Europe/Paris', SUMMER).abbreviation).toBe('CEST');
+    expect(label('Europe/Paris', WINTER).abbreviation).toBe('CET');
+  });
+
+  it('keeps a seasonal-looking abbreviation that is not seasonal', () => {
+    // BST is British Summer Time *and* Bangladesh Standard Time. Dhaka does
+    // not observe daylight saving, so it keeps BST all year.
+    expect(label('Asia/Dhaka', SUMMER).abbreviation).toBe('BST');
+    expect(label('Asia/Dhaka', WINTER).abbreviation).toBe('BST');
+    expect(label('Asia/Dhaka', WINTER).name).toBe('Bangladesh Standard Time');
+  });
+
+  it('does not invent an abbreviation from the name', () => {
+    // "Pakistan Standard Time" shortens to PKT, not to the Pacific's PST.
+    expect(label('Asia/Karachi', SUMMER).abbreviation).not.toBe('PST');
+    expect(label('America/Los_Angeles', WINTER).abbreviation).toBe('PST');
+    // A zone with no settled abbreviation falls back to the offset rather
+    // than making one up.
+    const marquesas = label('Pacific/Marquesas', SUMMER);
+    expect(marquesas.abbreviation).toBeNull();
+    expect(marquesas.short).toBe('UTC−9:30');
+    expect(marquesas.name).toBe('Marquesas Time');
+  });
+
+  it('always offers something to show', () => {
+    for (const zone of ['UTC', 'Asia/Kathmandu', 'Australia/Eucla', 'Antarctica/Troll']) {
+      const result = label(zone, SUMMER);
+      expect(result.name.length, zone).toBeGreaterThan(0);
+      expect(result.short.length, zone).toBeGreaterThan(0);
+    }
   });
 });
 

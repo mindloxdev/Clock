@@ -77,7 +77,7 @@ export function CityClockCard({ clock, selected, onSelect, onEdit }: CityClockCa
             <DayNightIcon isDay={reading.isDay} size={13} labelled />
             <span className="truncate">{relativeDay ?? date ?? clock.cityName}</span>
           </span>
-          {clock.prefs.showOffset ? <span className="tnum shrink-0">{reading.offsetLabel}</span> : null}
+          {clock.prefs.showOffset ? <span className="tnum shrink-0">{reading.zone.short}</span> : null}
         </div>
 
         {/* Renders nothing when there is no reading to show. */}

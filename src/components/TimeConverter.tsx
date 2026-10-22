@@ -3,6 +3,7 @@ import { TriangleAlert } from 'lucide-react';
 import { useEffect, useId, useMemo, useState } from 'react';
 
 import { useDashboard } from '@/hooks/useDashboard';
+import { zoneLabel } from '@/time/abbreviations';
 import { citySubtitle } from '@/time/defaults';
 import { useNow } from '@/hooks/useNow';
 import {
@@ -16,7 +17,6 @@ import type { SavedClock } from '@/time/types';
 import {
   DATE_MEDIUM,
   dayDifference,
-  formatOffset,
   formatTime,
   formatZonedDate,
   zonedTime,
@@ -51,6 +51,7 @@ function ResultRow({
   const dayDelta = dayDifference(time, sourceTime);
   const offsetDelta = time.offsetMinutes - sourceTime.offsetMinutes;
   const city = citySubtitle(clock);
+  const zone = zoneLabel(clock.timeZone, instantMs, time.offsetMinutes);
 
   return (
     <li
@@ -70,8 +71,10 @@ function ResultRow({
         </p>
         <p className="truncate text-[12px] text-muted">
           {city ? city + ' · ' : ''}
+          {/* The zone as it will be named at that moment, not as it is now:
+              5pm in November is EST even when today is EDT. */}
+          <span title={zone.name}>{zone.short}</span>
           <span className="text-faint">
-            <span className="tnum">{formatOffset(time.offsetMinutes)}</span>
             {isSource ? null : ' · ' + formatOffsetDelta(offsetDelta)}
           </span>
         </p>

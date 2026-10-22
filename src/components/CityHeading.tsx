@@ -44,13 +44,14 @@ export function CityHeading({ clock, headingId, onAddCity }: CityHeadingProps) {
       </h2>
 
       <div className="flex shrink-0 flex-col items-start gap-5 md:items-end">
-        <p className="max-w-[30ch] text-[13px] leading-relaxed text-muted md:text-right">
-          {relationship}
-          <span className="text-faint">
-            {' · '}
-            {reading.offsetLabel}
-          </span>
-        </p>
+        <div className="max-w-[32ch] space-y-0.5 md:text-right">
+          <p className="text-[13px] font-medium text-ink">{reading.zone.name}</p>
+          <p className="text-[13px] leading-relaxed text-muted">
+            {reading.zone.abbreviation ? reading.zone.abbreviation + ' · ' : ''}
+            <span className="tnum">{reading.zone.offset}</span>
+            <span className="text-faint">{' · ' + relationship}</span>
+          </p>
+        </div>
         <Button variant="primary" onClick={onAddCity}>
           <Plus size={16} strokeWidth={2.2} aria-hidden="true" />
           Add Another City

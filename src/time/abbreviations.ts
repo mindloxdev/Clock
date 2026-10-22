@@ -18,6 +18,8 @@
  * population as it does everywhere else.
  */
 
+import { formatOffset } from './zones';
+
 export interface ZoneAbbreviation {
   abbr: string;
   /** Spelt out, for the badge tooltip and the result row. */
@@ -187,4 +189,120 @@ export function parseOffsetQuery(query: string): number | null {
   const total = Number(hours) * 60 + Number(minutes ?? 0);
   if (total > 14 * 60) return null;
   return sign === '+' ? total : -total;
+}
+
+
+/**
+ * Abbreviations that name the *summer* half of a zone's year.
+ *
+ * `BST` is in here because it is British Summer Time, but the same three
+ * letters are Bangladesh Standard Time, which is not seasonal at all. The
+ * lookup below resolves that by asking what the zone is doing right now
+ * rather than by trusting the letters.
+ */
+const DAYLIGHT_ABBREVIATIONS = new Set([
+  'EDT', 'CDT', 'MDT', 'PDT', 'AKDT', 'ADT', 'NDT',
+  'WEST', 'CEST', 'EEST', 'BST', 'IDT',
+  'AEDT', 'ACDT', 'NZDT', 'CLST',
+]);
+
+/** Zone to the abbreviations the curated table lists for it. */
+let zoneToAbbreviations: Map<string, string[]> | null = null;
+
+function abbreviationsForZone(timeZone: string): string[] {
+  if (!zoneToAbbreviations) {
+    zoneToAbbreviations = new Map();
+    for (const entry of ZONE_ABBREVIATIONS) {
+      for (const zone of entry.zones) {
+        const list = zoneToAbbreviations.get(zone);
+        if (list) list.push(entry.abbr);
+        else zoneToAbbreviations.set(zone, [entry.abbr]);
+      }
+    }
+  }
+  return zoneToAbbreviations.get(timeZone) ?? [];
+}
+
+const namedFormatters = new Map<string, Intl.DateTimeFormat>();
+
+function zoneNameFormatter(timeZone: string, width: 'long' | 'short'): Intl.DateTimeFormat {
+  const key = timeZone + '|' + width;
+  let fmt = namedFormatters.get(key);
+  if (!fmt) {
+    fmt = new Intl.DateTimeFormat('en-US', { timeZone, timeZoneName: width });
+    namedFormatters.set(key, fmt);
+  }
+  return fmt;
+}
+
+function zoneNamePart(timeZone: string, width: 'long' | 'short', date: Date): string {
+  return (
+    zoneNameFormatter(timeZone, width)
+      .formatToParts(date)
+      .find((part) => part.type === 'timeZoneName')?.value ?? ''
+  );
+}
+
+export interface ZoneLabel {
+  /** `Pakistan Standard Time`, `Mountain Daylight Time`. Always present. */
+  name: string;
+  /** `PKT`, `EDT`. `null` for zones with no settled abbreviation. */
+  abbreviation: string | null;
+  /** `UTC+5`. */
+  offset: string;
+  /** The abbreviation when there is one, otherwise the offset. */
+  short: string;
+}
+
+/** Keyed by zone and offset: the name only changes when the offset does. */
+const labelCache = new Map<string, ZoneLabel>();
+
+/**
+ * What to call a zone right now.
+ *
+ * The full name comes from `Intl`, which has one for every zone and switches
+ * between standard and summer forms on its own -- `Asia/Karachi` is "Pakistan
+ * Standard Time" and `America/Denver` is "Mountain Daylight Time" in July.
+ *
+ * The abbreviation is harder: `Intl` only returns real letters for North
+ * America and falls back to `GMT+5` everywhere else. So the curated table is
+ * consulted, and where a zone has both a winter and a summer form the full
+ * name decides which applies -- rather than deriving letters from the name,
+ * which would turn Pakistan Standard Time into the Pacific's `PST`.
+ */
+export function zoneLabel(timeZone: string, epochMs: number, offsetMinutes: number): ZoneLabel {
+  const key = timeZone + '|' + offsetMinutes;
+  const hit = labelCache.get(key);
+  if (hit) return hit;
+
+  const date = new Date(epochMs);
+  const offset = formatOffset(offsetMinutes);
+  let name: string;
+  let abbreviation: string | null = null;
+
+  try {
+    name = zoneNamePart(timeZone, 'long', date) || offset;
+    const short = zoneNamePart(timeZone, 'short', date);
+    if (/^[A-Z]{2,5}$/.test(short)) {
+      abbreviation = short;
+    } else {
+      const candidates = abbreviationsForZone(timeZone);
+      if (candidates.length > 0) {
+        const summer = /summer|daylight/i.test(name);
+        const matching = candidates.filter((abbr) =>
+          summer ? DAYLIGHT_ABBREVIATIONS.has(abbr) : !DAYLIGHT_ABBREVIATIONS.has(abbr),
+        );
+        // A zone with only a seasonal-looking abbreviation keeps it: `BST`
+        // is Bangladesh's year-round name even though it reads like summer.
+        abbreviation = matching[0] ?? candidates[0] ?? null;
+      }
+    }
+  } catch {
+    name = offset;
+  }
+
+  const label: ZoneLabel = { name, abbreviation, offset, short: abbreviation ?? offset };
+  if (labelCache.size > 600) labelCache.clear();
+  labelCache.set(key, label);
+  return label;
 }

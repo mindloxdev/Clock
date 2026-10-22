@@ -70,7 +70,7 @@ function FeaturedSlot({
           <span className="flex shrink-0 items-center gap-2.5 text-[11px] text-faint">
             <WeatherLine clock={clock} isDay={reading.isDay} />
             <DayNightIcon isDay={reading.isDay} size={13} labelled />
-            {clock.prefs.showOffset ? <span className="tnum">{reading.offsetLabel}</span> : null}
+            {clock.prefs.showOffset ? <span className="tnum">{reading.zone.short}</span> : null}
           </span>
         </header>
       )}
