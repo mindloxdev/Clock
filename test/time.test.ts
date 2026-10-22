@@ -16,7 +16,13 @@ import {
 } from '@/time/weather';
 import { loadCities, searchCities } from '@/time/cities';
 import { CLOCK_FAMILIES, CLOCK_PRESETS, clockKind, isClockStyleId } from '@/clocks/registry';
-import { citySubtitle, createClock, seedState } from '@/time/defaults';
+import {
+  RETIRED_SEED_TITLES,
+  citySubtitle,
+  createClock,
+  migrateSeedTitles,
+  seedState,
+} from '@/time/defaults';
 import { getSunInfo, isDaylight } from '@/time/sun';
 import { loadState, saveState } from '@/time/storage';
 import type { DashboardState } from '@/time/types';
@@ -354,7 +360,7 @@ describe('citySubtitle', () => {
   });
 
   it('names the city when the title is something else', () => {
-    expect(citySubtitle(createClock({ city, title: 'London Operations' }))).toBe('London');
+    expect(citySubtitle(createClock({ city, title: 'Design studio' }))).toBe('London');
   });
 });
 
@@ -665,10 +671,61 @@ describe('storage', () => {
   it('seeds a first-run dashboard with a hero', () => {
     const state = loadState();
     expect(state.clocks).toHaveLength(4);
+    // Cities under their own names; no invented job titles.
+    expect(state.clocks.map((clock) => clock.title)).toEqual([
+      'New York', 'Karachi', 'London', 'Paris',
+    ]);
+    for (const clock of state.clocks) expect(citySubtitle(clock)).toBeNull();
     expect(state.featured).toHaveLength(1);
     expect(state.clocks.some((clock) => clock.id === state.featured[0])).toBe(true);
     expect(state.theme).toBe('classic-light');
     expect(state.accent).toBe('mono');
+  });
+
+  it('clears a retired seed title from a dashboard saved earlier', () => {
+    const base = createClock({
+      city: {
+        name: 'New York', country: 'United States', province: 'New York',
+        timeZone: 'America/New_York', lat: 40.75, lon: -73.98,
+      },
+    });
+    saveState({
+      clocks: [{ ...base, title: 'My US Partner' }],
+      featured: [base.id], hour12: false, theme: 'classic-light',
+      accent: 'mono', weather: true, units: 'metric',
+    });
+    expect(loadState().clocks[0]?.title).toBe('New York');
+  });
+
+  it('leaves a name the viewer actually chose alone', () => {
+    const base = createClock({
+      city: {
+        name: 'Lisbon', country: 'Portugal', province: 'Lisboa',
+        timeZone: 'Europe/Lisbon', lat: 38.72, lon: -9.14,
+      },
+    });
+    // Same words, different city: this one was deliberate.
+    saveState({
+      clocks: [{ ...base, title: 'Home Office' }],
+      featured: [base.id], hour12: false, theme: 'classic-light',
+      accent: 'mono', weather: true, units: 'metric',
+    });
+    expect(loadState().clocks[0]?.title).toBe('Home Office');
+  });
+
+  it('only rewrites when the title, city and zone all match', () => {
+    const clock = createClock({
+      city: {
+        name: 'Karachi', country: 'Pakistan', province: 'Sind',
+        timeZone: 'Asia/Karachi', lat: 24.87, lon: 66.99,
+      },
+      title: 'Home Office',
+    });
+    expect(migrateSeedTitles([clock])[0]?.title).toBe('Karachi');
+    // A matching title on the wrong zone is somebody's own label.
+    const moved = { ...clock, timeZone: 'Asia/Dubai' };
+    expect(migrateSeedTitles([moved])[0]?.title).toBe('Home Office');
+    expect(RETIRED_SEED_TITLES.length).toBe(4);
   });
 
   it('round-trips a saved dashboard', () => {

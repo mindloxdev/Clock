@@ -66,15 +66,51 @@ export function createClock({ city, title, style, prefs }: CreateClockInput): Sa
 }
 
 /**
- * The first-run dashboard: the spec's four example cards, with London as the
- * selected clock so the city heading opens on the "London, United Kingdom"
- * example. Coordinates are the dataset's own, so sunrise and sunset are live
- * from the very first paint without waiting on the city download.
+ * Titles the first-run dashboard used to ship with.
+ *
+ * They were invented job labels, which is a guess about who is using this and
+ * reads as someone else's dashboard. Kept only so `migrateSeedTitles` can
+ * recognise and clear them; nothing creates them any more.
+ */
+export const RETIRED_SEED_TITLES: readonly { title: string; cityName: string; timeZone: string }[] =
+  [
+    { title: 'My US Partner', cityName: 'New York', timeZone: 'America/New_York' },
+    { title: 'Home Office', cityName: 'Karachi', timeZone: 'Asia/Karachi' },
+    { title: 'London Operations', cityName: 'London', timeZone: 'Europe/London' },
+    { title: 'European Team', cityName: 'Paris', timeZone: 'Europe/Paris' },
+  ];
+
+/**
+ * Replaces a retired seed title with the city's own name.
+ *
+ * Deliberately narrow: the title, the city *and* the zone all have to match a
+ * clock nobody has touched. A clock the viewer genuinely named "Home Office"
+ * for somewhere other than Karachi keeps its name.
+ */
+export function migrateSeedTitles(clocks: SavedClock[]): SavedClock[] {
+  return clocks.map((clock) =>
+    RETIRED_SEED_TITLES.some(
+      (retired) =>
+        retired.title === clock.title &&
+        retired.cityName === clock.cityName &&
+        retired.timeZone === clock.timeZone,
+    )
+      ? { ...clock, title: clock.cityName }
+      : clock,
+  );
+}
+
+/**
+ * The first-run dashboard: four cities under their own names.
+ *
+ * No invented titles -- a clock is called London until someone decides it
+ * should be called something else. Coordinates are the dataset's own, so
+ * sunrise, sunset and weather are live from the first paint without waiting
+ * on the city download.
  */
 export function seedState(): DashboardState {
   const clocks = [
     createClock({
-      title: 'My US Partner',
       city: {
         name: 'New York',
         country: 'United States',
@@ -85,7 +121,6 @@ export function seedState(): DashboardState {
       },
     }),
     createClock({
-      title: 'Home Office',
       city: {
         name: 'Karachi',
         country: 'Pakistan',
@@ -96,7 +131,6 @@ export function seedState(): DashboardState {
       },
     }),
     createClock({
-      title: 'London Operations',
       city: {
         name: 'London',
         country: 'United Kingdom',
@@ -107,7 +141,6 @@ export function seedState(): DashboardState {
       },
     }),
     createClock({
-      title: 'European Team',
       city: {
         name: 'Paris',
         country: 'France',

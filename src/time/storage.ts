@@ -9,7 +9,13 @@
  */
 import { isClockStyleId } from '@/clocks/registry';
 
-import { DEFAULT_PREFS, DEFAULT_STYLE, MAX_FEATURED, seedState } from './defaults';
+import {
+  DEFAULT_PREFS,
+  DEFAULT_STYLE,
+  MAX_FEATURED,
+  migrateSeedTitles,
+  seedState,
+} from './defaults';
 import type {
   AccentId,
   ClockAppearance,
@@ -139,9 +145,11 @@ export function loadState(): DashboardState {
   if (!Array.isArray(raw.clocks)) return seedState();
 
   const seenIds = new Set<string>();
-  const clocks = raw.clocks
-    .map((clock) => parseClock(clock, seenIds))
-    .filter((clock): clock is SavedClock => clock !== null);
+  const clocks = migrateSeedTitles(
+    raw.clocks
+      .map((clock) => parseClock(clock, seenIds))
+      .filter((clock): clock is SavedClock => clock !== null),
+  );
 
   return {
     clocks,
