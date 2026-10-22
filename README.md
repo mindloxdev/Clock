@@ -94,6 +94,14 @@ decides which applies. They are never derived from the name's initials —
 that turns Pakistan Standard Time into the Pacific's `PST`. A zone with no
 settled abbreviation shows its offset instead of an invented one.
 
+**Comparing is not committing.** The converter searches the whole city
+dataset, not just the saved clocks: a city pulled in for one comparison is a
+real clock for rendering but is never written to the dashboard, and carries a
+`+` for the times the answer turns out to be worth keeping. The fields are
+initialised once per opening rather than whenever the dashboard changes —
+otherwise keeping a city wiped the date and time just typed, since adding a
+clock moves the hero.
+
 **Converting *to* an instant is the hard direction.** Everything else goes
 instant → wall clock, which is always well defined. Going back is not: twice a
 year a zone skips an hour, so `02:30` never happens, and twice a year it

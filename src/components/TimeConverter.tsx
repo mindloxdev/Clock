@@ -1,10 +1,11 @@
 import clsx from 'clsx';
-import { TriangleAlert } from 'lucide-react';
-import { useEffect, useId, useMemo, useState } from 'react';
+import { Plus, Search, TriangleAlert, X } from 'lucide-react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { useDashboard } from '@/hooks/useDashboard';
 import { zoneLabel } from '@/time/abbreviations';
-import { citySubtitle } from '@/time/defaults';
+import { citiesIfLoaded, describeCity, loadCities, searchCities, type City } from '@/time/cities';
+import { citySubtitle, createClock } from '@/time/defaults';
 import { useNow } from '@/hooks/useNow';
 import {
   formatOffsetDelta,
@@ -24,7 +25,7 @@ import {
 
 import { DayNightIcon } from './DayNight';
 import { Dialog } from './ui/Dialog';
-import { Button, Field, inputClass } from './ui/controls';
+import { Button, Field, IconButton, inputClass } from './ui/controls';
 
 const DAY_MS = 86400000;
 
@@ -34,6 +35,8 @@ function ResultRow({
   sourceZone,
   isSource,
   hour12,
+  onRemove,
+  onKeep,
 }: {
   clock: SavedClock;
   instantMs: number;
@@ -41,6 +44,9 @@ function ResultRow({
   sourceZone: string;
   isSource: boolean;
   hour12: boolean;
+  /** Set for a city added just for this comparison. */
+  onRemove?: () => void;
+  onKeep?: () => void;
 }) {
   const time = zonedTime(instantMs, clock.timeZone);
   const sourceTime = zonedTime(instantMs, sourceZone);
@@ -68,6 +74,11 @@ function ResultRow({
               From
             </span>
           ) : null}
+          {onRemove ? (
+            <span className="shrink-0 rounded-full border border-dashed border-line-strong px-2 py-0.5 text-[10px] font-medium tracking-[0.08em] text-faint uppercase">
+              Just this once
+            </span>
+          ) : null}
         </p>
         <p className="truncate text-[12px] text-muted">
           {city ? city + ' · ' : ''}
@@ -79,6 +90,17 @@ function ResultRow({
           </span>
         </p>
       </div>
+
+      {onRemove ? (
+        <span className="order-last flex shrink-0 items-center gap-0.5">
+          <IconButton label={'Keep ' + clock.cityName + ' on the dashboard'} onClick={onKeep}>
+            <Plus size={15} strokeWidth={2} aria-hidden="true" />
+          </IconButton>
+          <IconButton label={'Remove ' + clock.cityName + ' from the comparison'} onClick={onRemove}>
+            <X size={15} strokeWidth={2} aria-hidden="true" />
+          </IconButton>
+        </span>
+      ) : null}
 
       <div className="shrink-0 text-right">
         <p className="tnum flex items-baseline justify-end gap-1.5 text-[22px] leading-none font-semibold text-ink">
@@ -123,7 +145,7 @@ export interface TimeConverterProps {
  * repeated are called out rather than silently resolved.
  */
 export function TimeConverter({ open, onClose }: TimeConverterProps) {
-  const { state, hero } = useDashboard();
+  const { state, hero, addClock } = useDashboard();
   // A minute is enough: this only drives the "Now" default and the live clock.
   const nowMs = useNow('minute');
 
@@ -132,23 +154,81 @@ export function TimeConverter({ open, onClose }: TimeConverterProps) {
   const [time, setTime] = useState('');
   const [occurrence, setOccurrence] = useState<'first' | 'second'>('first');
 
+  /*
+    Cities pulled in just to answer one question. They are real clocks for
+    rendering purposes but are never saved: comparing against a city should
+    not mean committing it to the dashboard. They outlive a close so the
+    comparison is still there when the dialog is reopened.
+  */
+  const [extras, setExtras] = useState<SavedClock[]>([]);
+  const [cityQuery, setCityQuery] = useState('');
+  const [cities, setCities] = useState<City[] | null>(citiesIfLoaded);
+
   const sourceSelectId = useId();
+  const citySearchId = useId();
   const dateId = useId();
   const timeId = useId();
 
-  const source =
-    state.clocks.find((clock) => clock.id === sourceId) ?? hero ?? state.clocks[0] ?? null;
+  /** Saved clocks first, then anything added for this comparison. */
+  const allClocks = useMemo(() => [...state.clocks, ...extras], [state.clocks, extras]);
 
-  // Opening the dialog starts from the selected clock, right now.
+  const source = allClocks.find((clock) => clock.id === sourceId) ?? hero ?? allClocks[0] ?? null;
+
+  const cityResults = useMemo(
+    () => (cities && cityQuery.trim() ? searchCities(cities, cityQuery, { limit: 8 }) : []),
+    [cities, cityQuery],
+  );
+
+  const addExtra = (city: City) => {
+    // Already on the dashboard, or already added: nothing to do.
+    const already = allClocks.some(
+      (clock) => clock.cityName === city.name && clock.timeZone === city.timeZone,
+    );
+    setCityQuery('');
+    if (already) return;
+    setExtras((current) => [...current, createClock({ city })]);
+  };
+
+  const keepExtra = (clock: SavedClock) => {
+    addClock({
+      city: {
+        name: clock.cityName,
+        country: clock.country,
+        province: clock.province,
+        timeZone: clock.timeZone,
+        lat: clock.lat,
+        lon: clock.lon,
+      },
+    });
+    setExtras((current) => current.filter((entry) => entry.id !== clock.id));
+  };
+
+  const removeExtra = (id: string) =>
+    setExtras((current) => current.filter((entry) => entry.id !== id));
+
+  const initialised = useRef(false);
+
+  /*
+    Opening the dialog starts from the selected clock, right now -- and then
+    leaves the fields alone. Re-running whenever the dashboard changed meant
+    that keeping a compared city wiped the date and time just typed, since
+    adding a clock moves the hero.
+  */
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      initialised.current = false;
+      return;
+    }
+    if (initialised.current) return;
     const start = hero ?? state.clocks[0] ?? null;
     if (!start) return;
+    initialised.current = true;
     const fields = wallTimeInputs(Date.now(), start.timeZone);
     setSourceId(start.id);
     setDate(fields.date);
     setTime(fields.time);
     setOccurrence('first');
+    void loadCities().then(setCities);
   }, [open, hero, state.clocks]);
 
   const wall = useMemo(() => parseWallTime(date, time), [date, time]);
@@ -181,6 +261,73 @@ export function TimeConverter({ open, onClose }: TimeConverterProps) {
     setOccurrence('first');
   };
 
+  /*
+    Any city, not only the saved ones. Comparing against somewhere is a
+    question, not a commitment -- the row carries a `+` for the times the
+    answer is worth keeping.
+  */
+  const citySearch = (
+    <div className="space-y-2">
+      <Field
+        label="Compare another city"
+        htmlFor={citySearchId}
+        hint="Added for this comparison only, unless you keep it."
+      >
+        <div className="relative">
+          <Search
+            size={15}
+            strokeWidth={2}
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-faint"
+          />
+          <input
+            id={citySearchId}
+            type="search"
+            autoComplete="off"
+            placeholder={cities ? 'Lahore, Tokyo, São Paulo…' : 'Loading cities…'}
+            value={cityQuery}
+            onChange={(event) => setCityQuery(event.target.value)}
+            onFocus={() => {
+              if (!cities) void loadCities().then(setCities);
+            }}
+            className={clsx(inputClass, 'pl-9.5')}
+          />
+        </div>
+      </Field>
+
+      {cityResults.length > 0 ? (
+        <ul className="max-h-[13rem] overflow-y-auto rounded-card border border-line">
+          {cityResults.map(({ city, badge }) => (
+            <li key={city.id} className="border-b border-line last:border-b-0">
+              <button
+                type="button"
+                onClick={() => addExtra(city)}
+                className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-2.5 text-left transition-colors duration-150 hover:bg-sunken"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate text-[13px] font-medium text-ink">
+                    {city.name}
+                  </span>
+                  <span className="block truncate text-[12px] text-muted">
+                    {describeCity(city)}
+                  </span>
+                </span>
+                <span className="flex shrink-0 items-center gap-2">
+                  {badge ? (
+                    <span className="tnum rounded-full border border-line px-2 py-0.5 text-[10px] font-medium text-muted">
+                      {badge}
+                    </span>
+                  ) : null}
+                  <Plus size={15} strokeWidth={2} aria-hidden="true" className="text-faint" />
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+
   return (
     <Dialog
       open={open}
@@ -190,10 +337,13 @@ export function TimeConverter({ open, onClose }: TimeConverterProps) {
       size="lg"
       footer={<Button onClick={onClose}>Done</Button>}
     >
-      {state.clocks.length === 0 || !source ? (
-        <p className="py-6 text-center text-[13px] text-muted">
-          Add a city first and its time will show up here.
-        </p>
+      {!source ? (
+        <div className="space-y-4">
+          <p className="text-[13px] text-muted">
+            Search for a city to compare. Nothing is added to your dashboard.
+          </p>
+          {citySearch}
+        </div>
       ) : (
         <div className="space-y-6">
           <div className="grid gap-3 sm:grid-cols-[1.4fr_1fr_0.8fr]">
@@ -204,7 +354,7 @@ export function TimeConverter({ open, onClose }: TimeConverterProps) {
                 onChange={(event) => setSourceId(event.target.value)}
                 className={clsx(inputClass, 'select-arrow cursor-pointer appearance-none pr-10')}
               >
-                {state.clocks.map((clock) => {
+                {allClocks.map((clock) => {
                   const city = citySubtitle(clock);
                   return (
                     <option key={clock.id} value={clock.id}>
@@ -295,6 +445,8 @@ export function TimeConverter({ open, onClose }: TimeConverterProps) {
             </div>
           ) : null}
 
+          {citySearch}
+
           {instantMs === null ? (
             <p className="py-4 text-center text-[13px] text-muted">
               Choose a date and a time to compare.
@@ -312,16 +464,22 @@ export function TimeConverter({ open, onClose }: TimeConverterProps) {
               </p>
 
               <ul className="space-y-2">
-                {state.clocks.map((clock) => (
-                  <ResultRow
-                    key={clock.id}
-                    clock={clock}
-                    instantMs={instantMs}
-                    sourceZone={source.timeZone}
-                    isSource={clock.id === source.id}
-                    hour12={state.hour12}
-                  />
-                ))}
+                {allClocks.map((clock) => {
+                  const temporary = extras.some((entry) => entry.id === clock.id);
+                  return (
+                    <ResultRow
+                      key={clock.id}
+                      clock={clock}
+                      instantMs={instantMs}
+                      sourceZone={source.timeZone}
+                      isSource={clock.id === source.id}
+                      hour12={state.hour12}
+                      {...(temporary
+                        ? { onRemove: () => removeExtra(clock.id), onKeep: () => keepExtra(clock) }
+                        : null)}
+                    />
+                  );
+                })}
               </ul>
             </>
           )}
