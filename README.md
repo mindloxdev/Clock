@@ -204,8 +204,12 @@ horizontal overflow at every width.
 ## Deploying
 
 Pushing to `main` runs `.github/workflows/deploy.yml`, which type-checks, runs
-the tests and only then builds and publishes to GitHub Pages. A red test does
-not ship.
+the tests, and only then builds and force-pushes `dist/` to the `gh-pages`
+branch that Pages serves. A red test does not ship.
+
+It publishes to a branch rather than using the Actions-based Pages deployment
+because changing a repository's Pages source needs admin rights that the
+workflow token does not have; pushing a branch needs only `contents: write`.
 
 The production build sets `base: '/Clock/'` because the site is served from a
 repository subpath; the dev server stays at the root, where a prefix would
