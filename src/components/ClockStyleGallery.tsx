@@ -10,8 +10,8 @@ import type { ClockStyleId, SavedClock } from '@/time/types';
 import { ClockFace } from './clocks/registry';
 import { inputClass } from './ui/controls';
 
-/** Previews are drawn small; the dial geometry holds at any size. */
-const PREVIEW_SIZE = 84;
+/** Drawn at this size inside a 190px box, then scaled to fit the tile. */
+const PREVIEW_SIZE = 110;
 const TILE_HEIGHT = 96;
 
 /*
@@ -96,18 +96,26 @@ function StyleTile({
         </span>
       ) : null}
 
+      {/*
+        Drawn at a fixed width and scaled down, rather than sized to the tile.
+        A tile is 113px across on a phone and the wider faces render about
+        190px, so without this the digits are cropped — the leading one goes
+        missing, which on a clock is worse than small.
+      */}
       <div
         aria-hidden="true"
         className="flex items-center justify-center overflow-hidden rounded-[10px]"
         style={{ height: TILE_HEIGHT }}
       >
         {visible ? (
-          <ClockFace
-            clock={clock}
-            reading={reading}
-            size={PREVIEW_SIZE}
-            previewPreset={preset}
-          />
+          <div className="w-[190px] origin-center scale-[0.55] sm:scale-[0.8]">
+            <ClockFace
+              clock={clock}
+              reading={reading}
+              size={PREVIEW_SIZE}
+              previewPreset={preset}
+            />
+          </div>
         ) : null}
       </div>
 
@@ -157,7 +165,7 @@ export function ClockStyleGallery({
 
   return (
     <div className={clsx('space-y-3', fill && 'flex min-h-0 flex-1 flex-col')}>
-      <div className="relative">
+      <div className="relative shrink-0">
         <Search
           size={15}
           strokeWidth={2}
@@ -174,7 +182,12 @@ export function ClockStyleGallery({
         />
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
+      {/*
+        One scrollable row on a phone, wrapped on wider screens. Wrapping
+        eight chips at 390px took three rows and most of the height the grid
+        needed.
+      */}
+      <div className="no-scrollbar -mx-1 flex shrink-0 gap-1.5 overflow-x-auto px-1 pb-0.5 sm:flex-wrap sm:overflow-visible sm:pb-0">
         <FamilyChip
           label="All"
           count={CLOCK_FAMILIES.reduce((sum, entry) => sum + entry.count, 0)}
@@ -192,7 +205,7 @@ export function ClockStyleGallery({
         ))}
       </div>
 
-      <p className="text-[12px] text-muted" aria-live="polite">
+      <p className="shrink-0 text-[12px] text-muted" aria-live="polite">
         {results.length === 0
           ? 'No designs match that.'
           : results.length + ' design' + (results.length === 1 ? '' : 's') + ' · currently ' + selected.name}
@@ -246,7 +259,7 @@ function FamilyChip({
       onClick={onClick}
       aria-pressed={active}
       className={clsx(
-        'cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors duration-150',
+        'shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors duration-150',
         active
           ? 'border-ink bg-invert text-on-invert'
           : 'border-line text-muted hover:border-line-strong hover:text-ink',

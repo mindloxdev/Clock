@@ -3,6 +3,7 @@ import { TriangleAlert } from 'lucide-react';
 import { useEffect, useId, useMemo, useState } from 'react';
 
 import { useDashboard } from '@/hooks/useDashboard';
+import { citySubtitle } from '@/time/defaults';
 import { useNow } from '@/hooks/useNow';
 import {
   formatOffsetDelta,
@@ -49,6 +50,7 @@ function ResultRow({
   // 5pm Tuesday in New York is 2am *Wednesday* in Karachi.
   const dayDelta = dayDifference(time, sourceTime);
   const offsetDelta = time.offsetMinutes - sourceTime.offsetMinutes;
+  const city = citySubtitle(clock);
 
   return (
     <li
@@ -67,9 +69,8 @@ function ResultRow({
           ) : null}
         </p>
         <p className="truncate text-[12px] text-muted">
-          {clock.cityName}
+          {city ? city + ' · ' : ''}
           <span className="text-faint">
-            {' · '}
             <span className="tnum">{formatOffset(time.offsetMinutes)}</span>
             {isSource ? null : ' · ' + formatOffsetDelta(offsetDelta)}
           </span>
@@ -200,11 +201,14 @@ export function TimeConverter({ open, onClose }: TimeConverterProps) {
                 onChange={(event) => setSourceId(event.target.value)}
                 className={clsx(inputClass, 'select-arrow cursor-pointer appearance-none pr-10')}
               >
-                {state.clocks.map((clock) => (
-                  <option key={clock.id} value={clock.id}>
-                    {clock.title} — {clock.cityName}
-                  </option>
-                ))}
+                {state.clocks.map((clock) => {
+                  const city = citySubtitle(clock);
+                  return (
+                    <option key={clock.id} value={clock.id}>
+                      {city ? clock.title + ' — ' + city : clock.title}
+                    </option>
+                  );
+                })}
               </select>
             </Field>
 

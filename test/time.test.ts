@@ -16,7 +16,7 @@ import {
 } from '@/time/weather';
 import { loadCities, searchCities } from '@/time/cities';
 import { CLOCK_FAMILIES, CLOCK_PRESETS, clockKind, isClockStyleId } from '@/clocks/registry';
-import { createClock, seedState } from '@/time/defaults';
+import { citySubtitle, createClock, seedState } from '@/time/defaults';
 import { getSunInfo, isDaylight } from '@/time/sun';
 import { loadState, saveState } from '@/time/storage';
 import type { DashboardState } from '@/time/types';
@@ -337,6 +337,24 @@ describe('parseOffsetQuery', () => {
     expect(parseOffsetQuery('2026')).toBeNull();
     expect(parseOffsetQuery('+25')).toBeNull();
     expect(parseOffsetQuery('london')).toBeNull();
+  });
+});
+
+describe('citySubtitle', () => {
+  const city = {
+    name: 'London', country: 'United Kingdom', province: 'Westminster',
+    timeZone: 'Europe/London', lat: 51.5, lon: -0.1167,
+  };
+
+  it('says nothing when the title is already the city', () => {
+    // A clock added without a custom title takes the city as its title, so
+    // showing both would read "London - London".
+    expect(citySubtitle(createClock({ city }))).toBeNull();
+    expect(citySubtitle(createClock({ city, title: '   ' }))).toBeNull();
+  });
+
+  it('names the city when the title is something else', () => {
+    expect(citySubtitle(createClock({ city, title: 'London Operations' }))).toBe('London');
   });
 });
 

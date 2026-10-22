@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp, Copy, Pencil, Plus, Trash } from 'lucide-react';
 import { useClockReading } from '@/hooks/useClockReading';
 import { useWeather } from '@/hooks/useWeather';
 import { useDashboard } from '@/hooks/useDashboard';
+import { citySubtitle } from '@/time/defaults';
 import type { AccentId, SavedClock, ThemeId, UnitSystem } from '@/time/types';
 
 import { Dialog } from './ui/Dialog';
@@ -33,18 +34,20 @@ function ClockRow({ clock, onEdit }: { clock: SavedClock; onEdit: () => void }) 
   const index = state.clocks.findIndex((entry) => entry.id === clock.id);
 
   return (
-    <li className="flex items-center gap-2 py-2.5">
-      <div className="min-w-0 flex-1">
+    // The row wraps on narrow screens: five 44px controls beside the name
+    // left about sixty pixels for it, which truncated every clock to "M...".
+    <li className="flex flex-wrap items-center gap-x-2 gap-y-1 py-2.5">
+      <div className="min-w-0 basis-full sm:basis-auto sm:flex-1">
         <p className="truncate text-[13px] font-medium text-ink">{clock.title}</p>
         <p className="truncate text-[12px] text-muted">
-          {clock.cityName}
+          {citySubtitle(clock) ? citySubtitle(clock) + ' · ' : ''}
           <span className="text-faint">
-            {' · '}
             <span className="tnum">{reading.offsetLabel}</span>
           </span>
         </p>
       </div>
 
+      <div className="ml-auto flex items-center gap-0.5">
       <IconButton
         label={'Move ' + clock.title + ' earlier'}
         disabled={index <= 0}
@@ -68,6 +71,7 @@ function ClockRow({ clock, onEdit }: { clock: SavedClock; onEdit: () => void }) 
       <IconButton label={'Delete ' + clock.title} onClick={() => removeClock(clock.id)}>
         <Trash size={15} strokeWidth={2} aria-hidden="true" />
       </IconButton>
+      </div>
     </li>
   );
 }

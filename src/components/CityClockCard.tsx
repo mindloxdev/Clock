@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import { Ellipsis } from 'lucide-react';
 
 import { useClockReading } from '@/hooks/useClockReading';
+import { citySubtitle } from '@/time/defaults';
 import type { SavedClock } from '@/time/types';
 import { DATE_SHORT, formatTime, formatZonedDate, relativeDayLabel } from '@/time/zones';
 
@@ -59,8 +60,8 @@ export function CityClockCard({ clock, selected, onSelect, onEdit }: CityClockCa
       <div className="pointer-events-none relative z-20 flex flex-col gap-3 p-4 sm:p-5">
         <div className="min-w-0 pr-8">
           <p className="truncate text-[13px] font-semibold tracking-[-0.005em]">{clock.title}</p>
-          {clock.cityName !== clock.title ? (
-            <p className={clsx('truncate text-[12px]', secondary)}>{clock.cityName}</p>
+          {citySubtitle(clock) ? (
+            <p className={clsx('truncate text-[12px]', secondary)}>{citySubtitle(clock)}</p>
           ) : null}
         </div>
 

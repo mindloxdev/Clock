@@ -38,19 +38,24 @@ export function Nav({ onPickCity, onOpenSettings, onOpenConverter }: NavProps) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-canvas/88 backdrop-blur-md">
-      <div className="mx-auto grid h-16 max-w-[1240px] grid-cols-[auto_1fr_auto] items-center gap-3 px-4 sm:gap-6 sm:px-8">
-        <div className="flex items-center gap-2.5">
+      {/*
+        One row on a laptop, two on a phone. Wrapping rather than hiding the
+        search behind another tap: squeezed between the mark and three
+        buttons it came out 157px wide, which is not a search field.
+        `order` keeps the search centred on wide screens and on its own line
+        below them, from a single instance.
+      */}
+      <div className="mx-auto flex max-w-[1240px] flex-wrap items-center gap-x-3 gap-y-2.5 px-4 py-3 sm:h-16 sm:flex-nowrap sm:gap-x-6 sm:px-8 sm:py-0">
+        <div className="order-1 flex items-center gap-2.5">
           <Logo />
-          <span className="hidden text-[15px] font-semibold tracking-[-0.015em] sm:block">
-            MultiClock
-          </span>
+          <span className="text-[15px] font-semibold tracking-[-0.015em]">MultiClock</span>
         </div>
 
-        <div className="flex min-w-0 justify-center">
+        <div className="order-3 flex w-full min-w-0 justify-center sm:order-2 sm:w-auto sm:flex-1">
           <CitySearch onPickCity={onPickCity} />
         </div>
 
-        <div className="flex items-center gap-0.5">
+        <div className="order-2 ml-auto flex items-center gap-0.5 sm:order-3 sm:ml-0">
           {/* The name states the action, so a three-way cycle still tells a
               screen-reader user where the next press lands. */}
           <IconButton

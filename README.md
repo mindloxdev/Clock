@@ -170,6 +170,18 @@ remaining zone `Intl` knows about as a zone-only entry. Entries with no
 coordinates simply omit sunrise and sunset. The file is behind a dynamic
 `import()`, so its 193 kB only loads when a search field is opened.
 
+## On a phone
+
+The header wraps to two rows below `sm`, giving the search the full width
+instead of the 157px it got squeezed into beside the mark and three buttons.
+The clock-management rows wrap the same way, because five 44px controls beside
+a name left about sixty pixels for it. The design gallery's family chips
+become one horizontally scrollable row, and its previews are drawn at a fixed
+size and scaled to fit the tile — a tile is 113px across on a phone and the
+wider faces render about 190px, so without that the leading digit was cropped.
+
+Measured at 320–1600px with zero horizontal overflow at every width.
+
 ## Accessibility
 
 - The segmented controls and the style gallery are real `<input type="radio">`
@@ -187,7 +199,7 @@ coordinates simply omit sunrise and sunset. The file is behind a dynamic
 
 ## Verified
 
-61 tests cover the zone arithmetic (DST in both hemispheres, 45-minute and
+63 tests cover the zone arithmetic (DST in both hemispheres, 45-minute and
 negative half-hour offsets, date rollover), sunrise/sunset including the polar
 cases at Longyearbyen, time formatting, hand angles, abbreviation and offset
 search, dataset integrity, catalogue integrity (no duplicate ids or names,

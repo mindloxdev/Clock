@@ -11,6 +11,7 @@ import { DayNightIcon } from './DayNight';
 import { WeatherLine } from './Weather';
 import { HeroClock } from './HeroClock';
 import { clockPreset } from '@/clocks/registry';
+import { citySubtitle } from '@/time/defaults';
 
 import { ClockFace, SIZE_PX } from './clocks/registry';
 import { Segmented } from './ui/controls';
@@ -62,8 +63,8 @@ function FeaturedSlot({
                 <Star size={12} strokeWidth={2.4} aria-label="Main clock" className="shrink-0 text-faint" />
               ) : null}
             </p>
-            {clock.cityName !== clock.title ? (
-              <p className="truncate text-[12px] text-muted">{clock.cityName}</p>
+            {citySubtitle(clock) ? (
+              <p className="truncate text-[12px] text-muted">{citySubtitle(clock)}</p>
             ) : null}
           </div>
           <span className="flex shrink-0 items-center gap-2.5 text-[11px] text-faint">

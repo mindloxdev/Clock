@@ -11,6 +11,7 @@ import type {
 } from '@/clocks/spec';
 import { DayNightIcon } from '@/components/DayNight';
 import type { ClockReading } from '@/hooks/useClockReading';
+import { citySubtitle } from '@/time/defaults';
 import type { SavedClock } from '@/time/types';
 import {
   DATE_MEDIUM,
@@ -667,9 +668,9 @@ export function WidgetFace({ clock, reading, preset, palette, size, hero }: Cloc
           <p className="truncate text-[13px] font-semibold" style={{ color: palette.ink }}>
             {clock.title}
           </p>
-          {clock.cityName !== clock.title ? (
+          {citySubtitle(clock) ? (
             <p className="truncate text-[12px]" style={{ color: palette.caption }}>
-              {clock.cityName}
+              {citySubtitle(clock)}
             </p>
           ) : null}
           {date ? (

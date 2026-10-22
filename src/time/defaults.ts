@@ -25,6 +25,18 @@ export const DEFAULT_PREFS: ClockPrefs = {
   handColor: null,
 };
 
+/**
+ * The city line to show beneath a clock's title, or `null` when the title is
+ * already the city name.
+ *
+ * A clock added without a custom title gets the city as its title, so showing
+ * both reads "London - London". One helper rather than the same conditional
+ * copied into every surface that lists a clock.
+ */
+export function citySubtitle(clock: Pick<SavedClock, 'title' | 'cityName'>): string | null {
+  return clock.cityName === clock.title ? null : clock.cityName;
+}
+
 export function newId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
   return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
